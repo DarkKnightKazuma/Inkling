@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "灵犀摘 - AI对话划线收藏",
+  "version": "1.0.0",
+  "description": "在 AI 聊天页面划线收藏金句，搭建你的个人知识库",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "灵犀摘"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

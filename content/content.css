@@ -1,0 +1,13 @@
+/* 高亮文本 */
+.lxz-highlight {
+  display: inline !important;
+  visibility: visible !important;
+  border-radius: 2px !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  position: static !important;
+}
+
+.lxz-highlight:hover {
+  filter: brightness(0.92) !important;
+}
