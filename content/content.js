@@ -619,19 +619,49 @@
     }
   }
 
-  // ── Alt+点击删除高亮 ──
+  // ── 设置状态 ──
+
+  let clickToCopyEnabled = false;
+  let toolbarEnabled = true;
+
+  chrome.storage.local.get(['clickToCopy', 'toolbarEnabled'], (res) => {
+    clickToCopyEnabled = !!res.clickToCopy;
+    toolbarEnabled = res.toolbarEnabled !== false; // 默认开启
+  });
+
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.clickToCopy) {
+      clickToCopyEnabled = !!changes.clickToCopy.newValue;
+    }
+    if (changes.toolbarEnabled) {
+      toolbarEnabled = changes.toolbarEnabled.newValue !== false;
+      if (!toolbarEnabled) hideToolbar();
+    }
+  });
+
+  // ── 高亮点击处理：Alt+点击删除 / 普通点击复制（需开启） ──
 
   function setupHighlightClickHandler() {
     document.addEventListener('click', (e) => {
       const hlSpan = e.target.closest('.lxz-highlight');
-      if (!hlSpan || !e.altKey) return;
+      if (!hlSpan) return;
 
       const highlightId = hlSpan.dataset.highlightId;
       if (!highlightId) return;
 
-      removeHighlight(highlightId);
-      sendMsg({ type: 'DELETE_HIGHLIGHT', id: highlightId });
-      showToast('已移除高亮');
+      if (e.altKey) {
+        removeHighlight(highlightId);
+        sendMsg({ type: 'DELETE_HIGHLIGHT', id: highlightId });
+        showToast('已移除高亮');
+      } else if (clickToCopyEnabled) {
+        const allSpans = document.querySelectorAll(`.lxz-highlight[data-highlight-id="${highlightId}"]`);
+        const text = Array.from(allSpans).map(s => s.textContent).join('');
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('已复制');
+        }).catch(() => {
+          showToast('复制失败');
+        });
+      }
     }, true);
   }
 
@@ -659,6 +689,8 @@
     if (toolbarHost && (toolbarHost === e.target || toolbarHost.contains(e.target))) return;
 
     setTimeout(() => {
+      if (!toolbarEnabled) return;
+
       const selection = window.getSelection();
       const text = selection?.toString().trim();
       console.log('[灵犀摘] 选区检测:', { hasSelection: !!selection, isCollapsed: selection?.isCollapsed, textLen: text?.length });

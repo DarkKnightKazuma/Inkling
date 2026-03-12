@@ -1,12 +1,30 @@
 'use strict';
 
-chrome.runtime.onInstalled.addListener(() => {
+const CONTEXT_MENU_ID = 'lxz-save-selection';
+
+function createContextMenu() {
   chrome.contextMenus.create({
-    id: 'lxz-save-selection',
+    id: CONTEXT_MENU_ID,
     title: '收藏到灵犀摘',
     contexts: ['selection'],
   });
+}
 
+function removeContextMenu() {
+  chrome.contextMenus.remove(CONTEXT_MENU_ID).catch(() => {});
+}
+
+async function syncContextMenu() {
+  const res = await chrome.storage.local.get(['contextMenuEnabled']);
+  const enabled = res.contextMenuEnabled !== false; // 默认开启
+  if (enabled) {
+    chrome.contextMenus.removeAll(() => createContextMenu());
+  } else {
+    removeContextMenu();
+  }
+}
+
+chrome.runtime.onInstalled.addListener(() => {
   // 初始化默认收藏夹
   chrome.storage.local.get('collections', (result) => {
     if (!result.collections) {
@@ -15,10 +33,23 @@ chrome.runtime.onInstalled.addListener(() => {
       });
     }
   });
+
+  // 初始化右键菜单
+  syncContextMenu();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  syncContextMenu();
+});
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.contextMenuEnabled) {
+    syncContextMenu();
+  }
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'lxz-save-selection' && tab?.id) {
+  if (info.menuItemId === CONTEXT_MENU_ID && tab?.id) {
     chrome.tabs.sendMessage(tab.id, { type: 'CONTEXT_MENU_SAVE' }).catch(() => {});
   }
 });

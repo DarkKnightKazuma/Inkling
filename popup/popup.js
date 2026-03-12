@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupBatchActions();
   setupAddCollection();
   setupSort();
+  setupClickCopy();
+  setupContextMenu();
   renderAll();
 });
 
@@ -240,6 +242,44 @@ function setupSort() {
     document.getElementById('sort-label').textContent = sortOrder === 'desc' ? '新→旧' : '旧→新';
     document.getElementById('btn-sort').classList.toggle('active', sortOrder === 'asc');
     renderAll();
+  });
+}
+
+// ── 点击高亮复制开关 ──
+
+function setupClickCopy() {
+  const btn = document.getElementById('btn-click-copy');
+
+  chrome.storage.local.get(['clickToCopy'], (res) => {
+    const enabled = !!res.clickToCopy;
+    btn.classList.toggle('active', enabled);
+  });
+
+  btn.addEventListener('click', async () => {
+    const res = await chrome.storage.local.get(['clickToCopy']);
+    const newVal = !res.clickToCopy;
+    await chrome.storage.local.set({ clickToCopy: newVal });
+    btn.classList.toggle('active', newVal);
+    showToast(newVal ? '点击复制已开启' : '点击复制已关闭');
+  });
+}
+
+// ── 浮动工具栏开关 ──
+
+function setupContextMenu() {
+  const btn = document.getElementById('btn-toolbar');
+
+  chrome.storage.local.get(['toolbarEnabled'], (res) => {
+    const enabled = res.toolbarEnabled !== false; // 默认开启
+    btn.classList.toggle('active', enabled);
+  });
+
+  btn.addEventListener('click', async () => {
+    const res = await chrome.storage.local.get(['toolbarEnabled']);
+    const newVal = res.toolbarEnabled === false; // 切换
+    await chrome.storage.local.set({ toolbarEnabled: newVal });
+    btn.classList.toggle('active', newVal);
+    showToast(newVal ? '浮动工具栏已开启' : '浮动工具栏已关闭');
   });
 }
 
