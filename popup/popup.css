@@ -338,6 +338,23 @@ body {
 
 .stat-num { font-weight: 700; color: var(--accent); font-size: 13px; }
 
+.sort-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text2);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.sort-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sort-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
 /* ── Main ── */
 
 .main {

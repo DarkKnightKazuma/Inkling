@@ -21,6 +21,7 @@ let filterDatePreset = 'all';
 let filterDateFrom = null; // Date object or null
 let filterDateTo = null;
 let filterSite = 'all';
+let sortOrder = 'desc'; // 'desc' = 新→旧, 'asc' = 旧→新
 
 // ── 通信 ──
 
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupSelectMode();
   setupBatchActions();
   setupAddCollection();
+  setupSort();
   renderAll();
 });
 
@@ -222,7 +224,23 @@ function getFilteredHighlights() {
     );
   }
 
+  // 排序
+  list = [...list].sort((a, b) =>
+    sortOrder === 'desc' ? b.createdAt - a.createdAt : a.createdAt - b.createdAt
+  );
+
   return list;
+}
+
+// ── 排序 ──
+
+function setupSort() {
+  document.getElementById('btn-sort').addEventListener('click', () => {
+    sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+    document.getElementById('sort-label').textContent = sortOrder === 'desc' ? '新→旧' : '旧→新';
+    document.getElementById('btn-sort').classList.toggle('active', sortOrder === 'asc');
+    renderAll();
+  });
 }
 
 // ── 多选模式 ──
@@ -263,7 +281,8 @@ function updateBatchBar() {
 
 function setupBatchActions() {
   document.getElementById('batch-copy').addEventListener('click', () => {
-    const texts = allHighlights.filter(h => selectedIds.has(h.id)).map(h => h.text);
+    const selected = getFilteredHighlights().filter(h => selectedIds.has(h.id));
+    const texts = selected.map(h => h.text);
     navigator.clipboard.writeText(texts.join('\n\n')).then(() => showToast(`已复制 ${texts.length} 条金句`));
   });
 
@@ -276,7 +295,7 @@ function setupBatchActions() {
   });
 
   document.getElementById('batch-export').addEventListener('click', () => {
-    const selected = allHighlights.filter(h => selectedIds.has(h.id));
+    const selected = getFilteredHighlights().filter(h => selectedIds.has(h.id));
     if (selected.length === 0) return;
 
     const md = generateMarkdown(selected);
